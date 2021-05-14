@@ -1,0 +1,12 @@
+!.gitignore
+
+# macOS
+._*
+.DS_Store
+
+# Vim
+*.swp
+
+# idea
+.idea
+

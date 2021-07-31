@@ -10,7 +10,7 @@ import (
 	"strings"
 )
 
-var _version_ = "0.1"
+var _version_ = "0.1.1"
 var (
 	version     bool
 	format      string

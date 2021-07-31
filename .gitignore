@@ -9,4 +9,5 @@
 
 # idea
 .idea
-
+/releases
+/vendor

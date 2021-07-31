@@ -39,9 +39,9 @@ tgsend -h
   -filename path
     	The file to sent.
   -filetype string
-    	Set the file type, Choose from ['photo', 'video', 'document'] (default 'document')
+    	Set the file type, Choose from ['photo', 'video', 'document', 'audio', 'sticker', 'animation'] (default 'document')
   -caption string
-    	Set the photo/video/document caption
+    	Set the photo/video/document/audio/animation caption
 
   -location
     	Send location

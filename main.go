@@ -12,23 +12,23 @@ import (
 
 var _version_ = "0.1"
 var (
-	version		bool
-	format 		string
-	pre 		bool	// preformatted fixed-width
-	preview 	bool  	// disable link previews in the message(s)
-	debug		bool
-	token 		string
-	timeout 	int
-	ChatID 		int64
+	version     bool
+	format      string
+	pre         bool // preformatted fixed-width
+	preview     bool // disable link previews in the message(s)
+	debug       bool
+	token       string
+	timeout     int
+	ChatID      int64
 	ChannelName string
-	message 	string
-	filename 	string
-	filetype 	string
-	caption 	string
-	location 	bool
-	longitude 	float64
-	latitude 	float64
-	disNotice	bool
+	message     string
+	filename    string
+	filetype    string
+	caption     string
+	location    bool
+	longitude   float64
+	latitude    float64
+	disNotice   bool
 )
 
 func Bot(token string, timeout int, debug bool) *tgbotapi.BotAPI {
@@ -96,6 +96,39 @@ func sendVideo(bot *tgbotapi.BotAPI, filename string, caption string) {
 	}
 }
 
+func sendAudio(bot *tgbotapi.BotAPI, filename string, caption string) {
+	var msg tgbotapi.AudioConfig
+	msg = tgbotapi.NewAudioUpload(ChatID, filename)
+	if len(caption) != 0 {
+		msg.Caption = caption
+	}
+	_, err := bot.Send(msg)
+	if err != nil {
+		errorExit(err.Error())
+	}
+}
+
+func sendSticker(bot *tgbotapi.BotAPI, filename string) {
+	var msg tgbotapi.StickerConfig
+	msg = tgbotapi.NewStickerUpload(ChatID, filename)
+	_, err := bot.Send(msg)
+	if err != nil {
+		errorExit(err.Error())
+	}
+}
+
+func sendAnimation(bot *tgbotapi.BotAPI, filename string, caption string) {
+	var msg tgbotapi.AnimationConfig
+	msg = tgbotapi.NewAnimationUpload(ChatID, filename)
+	if len(caption) != 0 {
+		msg.Caption = caption
+	}
+	_, err := bot.Send(msg)
+	if err != nil {
+		errorExit(err.Error())
+	}
+}
+
 func sendDocument(bot *tgbotapi.BotAPI, filename string, caption string) {
 	var msg tgbotapi.DocumentConfig
 	msg = tgbotapi.NewDocumentUpload(ChatID, filename)
@@ -116,10 +149,9 @@ func sendLocation(bot *tgbotapi.BotAPI, latitude float64, longitude float64) {
 		errorExit(err.Error())
 	}
 }
-
 func init() {
 	flag.BoolVar(&version, "version", false, "Print version information.")
-	flag.StringVar(&format, "format", "text", "How to format the message(s). " +
+	flag.StringVar(&format, "format", "text", "How to format the message(s). "+
 		"Choose from ['text', 'markdown', 'html']")
 	flag.BoolVar(&pre, "pre", false, "Send preformatted fixed-width (monospace) text.")
 	flag.BoolVar(&preview, "preview", false, "disable link previews in the message(s)")
@@ -130,9 +162,9 @@ func init() {
 	flag.StringVar(&ChannelName, "channel", "", "Send message to the public channel.")
 	flag.StringVar(&message, "message", "", "The message to sent.")
 	flag.StringVar(&filename, "filename", "", "The file to sent.")
-	flag.StringVar(&filetype, "filetype", "document", "Set the file type, " +
-		"Choose from ['photo', 'video', 'document']")
-	flag.StringVar(&caption, "caption", "","Set the photo/video/document caption")
+	flag.StringVar(&filetype, "filetype", "document",
+		"Set the file type, Choose from ['photo', 'video', 'document', 'audio', 'sticker', 'animation']")
+	flag.StringVar(&caption, "caption", "", "Set the photo/video/document caption")
 	flag.BoolVar(&location, "location", false, "Send location")
 	flag.Float64Var(&longitude, "longitude", 0, "Set longitude, value valid [-180, 180]")
 	flag.Float64Var(&latitude, "latitude", 0, "Set latitude, value valid [-90, 90]")
@@ -158,7 +190,7 @@ func main() {
 		log.Panic("token is invalid.")
 	}
 
-	if message == "-" {	// stdin
+	if message == "-" { // stdin
 		scanner := bufio.NewScanner(os.Stdin)
 		message = ""
 		for scanner.Scan() {
@@ -190,6 +222,12 @@ func main() {
 			sendPhoto(bot, filename, caption)
 		case "video":
 			sendVideo(bot, filename, caption)
+		case "audio":
+			sendAudio(bot, filename, caption)
+		case "sticker":
+			sendSticker(bot, filename)
+		case "animation":
+			sendAnimation(bot, filename, caption)
 		default:
 			sendDocument(bot, filename, caption)
 		}

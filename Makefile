@@ -1,5 +1,6 @@
 GOCMD=go
 CGO_ENABLED=0
+VERSION=$(shell grep 'var _version_ = ' main.go | cut -d'"' -f2)
 GOBUILD=$(GOCMD) build
 GOCLEAN=$(GOCMD) clean
 GOTEST=$(GOCMD) test
@@ -9,12 +10,14 @@ LDFLAGS+="-s -w"
 
 # Builds the project
 build:
-		$(GOBUILD) -ldflags=${LDFLAGS} -o $(DIR)/$(BINARY)
-		tar -Jcvf $(DIR)/$(BINARY)-$(GOOS)-$(GOARCH)-${VERSION}.tar.xz -C $(DIR) $(BINARY)
+		$(GOBUILD) -ldflags=${LDFLAGS} -o $(DIR)/$(BINARY)-$(GOOS)-$(GOARCH)
+		tar -Jcvf $(DIR)/$(BINARY)-$(GOOS)-$(GOARCH)-${VERSION}.tar.xz -C $(DIR) $(BINARY)-$(GOOS)-$(GOARCH)
+		rm -f $(DIR)/$(BINARY)-$(GOOS)-$(GOARCH)
 
 build-windows:
 		$(GOBUILD) -ldflags=${LDFLAGS} -o $(DIR)/$(BINARY).exe
 		tar -Jcvf $(DIR)/$(BINARY)-windows-amd64-${VERSION}.tar.xz -C $(DIR) $(BINARY).exe
+		rm -f $(DIR)/$(BINARY).exe
 
 linux-amd64:
 		$(GOCLEAN)
@@ -56,6 +59,10 @@ mac:
 		$(GOCLEAN)
 		GOOS=darwin GOARCH=amd64 make build
 
+mac-arm:
+		$(GOCLEAN)
+		GOOS=darwin GOARCH=arm64 make build
+
 android-termux:
 		$(GOCLEAN)
 		GOOS=android GOARCH=arm64 make build
@@ -72,6 +79,7 @@ release:
 		make linux-mips64le
 		make freebsd
 		make mac
+		make mac-arm
 		make windows
 
 		make clean

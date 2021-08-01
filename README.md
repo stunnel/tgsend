@@ -3,7 +3,8 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 
-tgsend is a command-line tool to send messages and files over Telegram to your account, to a group or to a channel.
+telegram-send in golang   
+tgsend is a command-line tool to send messages and files over Telegram to your account, group or channel.
 
 <!-- markdown-toc start - Don't edit this section. Run M-x markdown-toc-generate-toc again -->
 **Table of Contents**
@@ -68,7 +69,7 @@ It means that if you provide a `message`, parameters such as `location`, `filety
 1. Create a bot.  
    Chat with BotFather https://telegram.me/botfather, send /newbot command to create a new bot, and get the token, for example `110201543:AAHdqTcvCH1vGWJxfSeofSAs0K5PALDsaw`
 2. Chat with your bot, use your Telegram account.
-3. Get your telegram account's ID. Send any message to https://t.me/RawDataBot, This bot will return the raw message from Telegram(json format). `["message"]["from"]["id"]` is your account's ID. etc 12345678.
+3. Get your telegram account's ID. Send any message to https://t.me/RawDataBot, This bot will return the raw message from Telegram(json format). `["message"]["from"]["id"]` is your account's ID. eg 12345678.
 4. Afterward, now you can send a message via `tgsend`.  
    `tgsend -token 110201543:AAHdqTcvCH1vGWJxfSeofSAs0K5PALDsaw -chatid 12345678 -message "Hello World."`
 

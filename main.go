@@ -4,18 +4,19 @@ import (
 	"bufio"
 	"flag"
 	"fmt"
-	"github.com/go-telegram-bot-api/telegram-bot-api"
 	"log"
 	"os"
 	"strings"
+
+	"github.com/go-telegram-bot-api/telegram-bot-api"
 )
 
 var _version_ = "0.1.1"
 var (
 	version     bool
 	format      string
-	pre         bool // preformatted fixed-width
-	preview     bool // disable link previews in the message(s)
+	pre         bool		// preformatted fixed-width.
+	preview     bool		// disable link previews in the message(s).
 	debug       bool
 	token       string
 	timeout     int
@@ -161,7 +162,7 @@ func init() {
 	flag.Int64Var(&ChatID, "chatid", 0, "Send message to this chatID.")
 	flag.StringVar(&ChannelName, "channel", "", "Send message to the public channel.")
 	flag.StringVar(&message, "message", "", "The message to sent.")
-	flag.StringVar(&filename, "filename", "", "The file to sent.")
+	flag.StringVar(&filename, "filename", "", "The file to sent. images up to 10 MiB, files up to 50 MiB.")
 	flag.StringVar(&filetype, "filetype", "document",
 		"Set the file type, Choose from ['photo', 'video', 'document', 'audio', 'sticker', 'animation']")
 	flag.StringVar(&caption, "caption", "", "Set the photo/video/document caption")

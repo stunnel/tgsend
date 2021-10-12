@@ -69,34 +69,42 @@ It means that if you provide a `message`, parameters such as `location`, `filety
 1. Create a bot.  
    Chat with BotFather https://telegram.me/botfather, send /newbot command to create a new bot, and get the token, for example `110201543:AAHdqTcvCH1vGWJxfSeofSAs0K5PALDsaw`
 2. Chat with your bot, use your Telegram account.
-3. Get your telegram account's ID. Send any message to https://t.me/RawDataBot, This bot will return the raw message from Telegram(json format). `["message"]["from"]["id"]` is your account's ID. eg 12345678.
+3. Get your telegram account's ID. Send any message to https://t.me/RawDataBot, This bot will return the raw message from Telegram(json format). `["message"]["from"]["id"]` is your account's ID. eg `12345678`.
 4. Afterward, now you can send a message via `tgsend`.  
    `tgsend -token 110201543:AAHdqTcvCH1vGWJxfSeofSAs0K5PALDsaw -chatid 12345678 -message "Hello World."`
 
-There is a maximum message length of 4096 characters, larger messages will be automatically split up into smaller ones and sent separately.
+There is a maximum message length of 4096 characters and 50 MiB of file limit by Telegram, larger messages will be automatically split up into smaller ones and sent separately, larger files will fail to send.
 
 ## Example
 
 Send a message:
 
+Set environment variables
+
 ```shell
-tgsend -token 110201543:AAHdqTcvCH1vGWJxfSeofSAs0K5PALDsaw -chatid 12345678 \
+TG_TOKEN=110201543:AAHdqTcvCH1vGWJxfSeofSAs0K5PALDsaw
+TG_CHAT_ID=12345678
+```
+
+
+```shell
+tgsend -token "${TG_TOKEN}" -chatid "${TG_CHAT_ID}" \
        -message "Hello World."
 ```
 
-Send stdin:
+Send from stdin:
 ```shell
-echo "now: $(date)" | tgsend -chatid 12345678 \
-    -token 110201543:AAHdqTcvCH1vGWJxfSeofSAs0K5PALDsaw \
+echo "now: $(date)" | tgsend -chatid "${TG_CHAT_ID}" \
+    -token "${TG_TOKEN}" \
     -message -
 ```
 
 To send a message using Markdown or HTML formatting:
 ```shell
-tgsend -token 110201543:AAHdqTcvCH1vGWJxfSeofSAs0K5PALDsaw -chatid 12345678 \
+tgsend -token "${TG_TOKEN}" -chatid "${TG_CHAT_ID}" \
        -format markdown -message "*bold text* _italic text_"
 
-tgsend -token 110201543:AAHdqTcvCH1vGWJxfSeofSAs0K5PALDsaw -chatid 12345678 \
+tgsend -token "${TG_TOKEN}" -chatid "${TG_CHAT_ID}" \
        -format html -message '<b>bold</b>, <strong>bold</strong>
 <i>italic</i>, <em>italic</em>
 <a href="https://www.example.com/">inline URL</a>
@@ -107,7 +115,7 @@ tgsend -token 110201543:AAHdqTcvCH1vGWJxfSeofSAs0K5PALDsaw -chatid 12345678 \
 
 send a message using Markdown with multi lines:
 ```shell
-tgsend -token 110201543:AAHdqTcvCH1vGWJxfSeofSAs0K5PALDsaw -chatid 12345678 \
+tgsend -token "${TG_TOKEN}" -chatid "${TG_CHAT_ID}" \
        -format markdown -message '*bold text*
 _italic text_
 [inline URL](https://www.example.com/)
@@ -122,30 +130,30 @@ For more information on supported formatting, see the [Formatting options](https
 
 The `--pre` flag formats messages as fixed-width text:
 ```shell
-tgsend -token 110201543:AAHdqTcvCH1vGWJxfSeofSAs0K5PALDsaw -chatid 12345678 \
+tgsend -token "${TG_TOKEN}" -chatid "${TG_CHAT_ID}" \
        -pre -message "monospace"
 ```
 
 To send a message without link previews:
 ```shell
-tgsend -token 110201543:AAHdqTcvCH1vGWJxfSeofSAs0K5PALDsaw -chatid 12345678 \
+tgsend -token "${TG_TOKEN}" -chatid "${TG_CHAT_ID}" \
        -preview -message "https://github.com/"
 ```
 
 Send a file (maximum file size of 50 MB):
 ```shell
-tgsend -token 110201543:AAHdqTcvCH1vGWJxfSeofSAs0K5PALDsaw -chatid 12345678 \
+tgsend -token "${TG_TOKEN}" -chatid "${TG_CHAT_ID}" \
        -filetype document -filename document.pdf
 ```
 
 To send an image with an optional caption (maximum file size of 10 MB):
 ```shell
-tgsend -token 110201543:AAHdqTcvCH1vGWJxfSeofSAs0K5PALDsaw -chatid 12345678 \
+tgsend -token "${TG_TOKEN}" -chatid "${TG_CHAT_ID}" \
        -filetype photo -filename photo.jpg -caption "The Moon at night"
 ```
 
 To send a location via latitude and longitude:
 ```shell
-tgsend -token 110201543:AAHdqTcvCH1vGWJxfSeofSAs0K5PALDsaw -chatid 12345678 \
+tgsend -token "${TG_TOKEN}" -chatid "${TG_CHAT_ID}" \
        -location -latitude 35.5398033 -longitude -79.7488965
 ```

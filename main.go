@@ -4,19 +4,24 @@ import (
 	"bufio"
 	"flag"
 	"fmt"
-	"log"
 	"os"
 	"strings"
 
 	"github.com/go-telegram-bot-api/telegram-bot-api"
 )
 
-var _version_ = "0.1.1"
+const (
+	VERSION = "0.1.2"
+	AUTHOR  = "travis"
+	LICENSE = "MIT license"
+	WEBSITE = "https://github.com/travislee8964/tgsend"
+)
+
 var (
 	version     bool
 	format      string
-	pre         bool		// preformatted fixed-width.
-	preview     bool		// disable link previews in the message(s).
+	pre         bool // preformatted fixed-width.
+	preview     bool // disable link previews in the message(s).
 	debug       bool
 	token       string
 	timeout     int
@@ -32,23 +37,29 @@ var (
 	disNotice   bool
 )
 
-func Bot(token string, timeout int, debug bool) *tgbotapi.BotAPI {
-	bot, err := tgbotapi.NewBotAPI(token)
+var (
+	bot *tgbotapi.BotAPI
+	err error
+)
+
+func initBot(token string, timeout int, debug bool) {
+	bot, err = tgbotapi.NewBotAPI(token)
 	if err != nil {
-		log.Panic(err)
+		fmt.Printf("Create bot failed. error msg: %v\n", err.Error())
+		os.Exit(1)
 	}
+
 	bot.Debug = debug
 	u := tgbotapi.NewUpdate(0)
 	u.Timeout = timeout
-
-	return bot
 }
 
-func errorExit(err string) {
-	log.Panic("send message failed. error msg: ", err)
+func errorExit(errMsg string) {
+	fmt.Printf("send message failed. error msg: %v\n", errMsg)
+	os.Exit(1)
 }
 
-func sendMessage(bot *tgbotapi.BotAPI, message string) {
+func sendMessage(message string) {
 	var msg tgbotapi.MessageConfig
 	if ChatID != 0 {
 		msg = tgbotapi.NewMessage(ChatID, message)
@@ -61,7 +72,7 @@ func sendMessage(bot *tgbotapi.BotAPI, message string) {
 	msg.DisableWebPagePreview = preview
 	msg.DisableNotification = disNotice
 
-	if pre == true || format == "markdown" {
+	if pre || format == "markdown" {
 		msg.ParseMode = tgbotapi.ModeMarkdown
 	} else if format == "html" {
 		msg.ParseMode = tgbotapi.ModeHTML
@@ -73,83 +84,183 @@ func sendMessage(bot *tgbotapi.BotAPI, message string) {
 	}
 }
 
-func sendPhoto(bot *tgbotapi.BotAPI, filename string, caption string) {
-	var msg tgbotapi.PhotoConfig
-	msg = tgbotapi.NewPhotoUpload(ChatID, filename)
-	if len(caption) != 0 {
-		msg.Caption = caption
-	}
-	_, err := bot.Send(msg)
+func sendPhoto(filename string, caption string) {
+	msg := tgbotapi.NewPhotoUpload(ChatID, filename)
+	msg.Caption = caption
+
+	_, err = bot.Send(msg)
 	if err != nil {
 		errorExit(err.Error())
 	}
 }
 
-func sendVideo(bot *tgbotapi.BotAPI, filename string, caption string) {
-	var msg tgbotapi.VideoConfig
-	msg = tgbotapi.NewVideoUpload(ChatID, filename)
-	if len(caption) != 0 {
-		msg.Caption = caption
-	}
-	_, err := bot.Send(msg)
+func sendVideo(filename string, caption string) {
+	msg := tgbotapi.NewVideoUpload(ChatID, filename)
+	msg.Caption = caption
+
+	_, err = bot.Send(msg)
 	if err != nil {
 		errorExit(err.Error())
 	}
 }
 
-func sendAudio(bot *tgbotapi.BotAPI, filename string, caption string) {
-	var msg tgbotapi.AudioConfig
-	msg = tgbotapi.NewAudioUpload(ChatID, filename)
-	if len(caption) != 0 {
-		msg.Caption = caption
-	}
-	_, err := bot.Send(msg)
+func sendAudio(filename string, caption string) {
+	msg := tgbotapi.NewAudioUpload(ChatID, filename)
+	msg.Caption = caption
+
+	_, err = bot.Send(msg)
 	if err != nil {
 		errorExit(err.Error())
 	}
 }
 
-func sendSticker(bot *tgbotapi.BotAPI, filename string) {
-	var msg tgbotapi.StickerConfig
-	msg = tgbotapi.NewStickerUpload(ChatID, filename)
-	_, err := bot.Send(msg)
+func sendSticker(filename string) {
+	msg := tgbotapi.NewStickerUpload(ChatID, filename)
+
+	_, err = bot.Send(msg)
 	if err != nil {
 		errorExit(err.Error())
 	}
 }
 
-func sendAnimation(bot *tgbotapi.BotAPI, filename string, caption string) {
-	var msg tgbotapi.AnimationConfig
-	msg = tgbotapi.NewAnimationUpload(ChatID, filename)
-	if len(caption) != 0 {
-		msg.Caption = caption
-	}
-	_, err := bot.Send(msg)
+func sendAnimation(filename string, caption string) {
+	msg := tgbotapi.NewAnimationUpload(ChatID, filename)
+	msg.Caption = caption
+
+	_, err = bot.Send(msg)
 	if err != nil {
 		errorExit(err.Error())
 	}
 }
 
-func sendDocument(bot *tgbotapi.BotAPI, filename string, caption string) {
-	var msg tgbotapi.DocumentConfig
-	msg = tgbotapi.NewDocumentUpload(ChatID, filename)
-	if len(caption) != 0 {
-		msg.Caption = caption
-	}
-	_, err := bot.Send(msg)
+func sendDocument(filename string, caption string) {
+	msg := tgbotapi.NewDocumentUpload(ChatID, filename)
+	msg.Caption = caption
+
+	_, err = bot.Send(msg)
 	if err != nil {
 		errorExit(err.Error())
 	}
 }
 
-func sendLocation(bot *tgbotapi.BotAPI, latitude float64, longitude float64) {
-	var msg tgbotapi.LocationConfig
-	msg = tgbotapi.NewLocation(ChatID, latitude, longitude)
-	_, err := bot.Send(msg)
+func sendLocation(latitude float64, longitude float64) {
+	if longitude < -180 || longitude > 180 || latitude < -90 || latitude > 90 {
+		fmt.Printf("Longitude or latitude value invalid: %v, %v\n", latitude, longitude)
+		os.Exit(1)
+	}
+
+	msg := tgbotapi.NewLocation(ChatID, latitude, longitude)
+
+	_, err = bot.Send(msg)
 	if err != nil {
 		errorExit(err.Error())
 	}
 }
+
+func sendFile(filename string, filetype string, caption string) {
+	result, err := os.Stat(filename)
+	if err != nil {
+		fmt.Printf("Reading file %v error: %v\n", filename, err.Error())
+		os.Exit(1)
+	}
+
+	if result.IsDir() {
+		fmt.Printf("%v is a directory.\n", filename)
+		os.Exit(1)
+	}
+
+	if result.Size() > 1024*1024*50 {
+		fmt.Printf("File %v is too large, size: %v\n", filename, result.Size())
+		os.Exit(1)
+	}
+
+	switch filetype {
+	case "photo":
+		sendPhoto(filename, caption)
+	case "video":
+		sendVideo(filename, caption)
+	case "audio":
+		sendAudio(filename, caption)
+	case "sticker":
+		sendSticker(filename)
+	case "animation":
+		sendAnimation(filename, caption)
+	default:
+		sendDocument(filename, caption)
+	}
+}
+
+func checkParam() {
+	if ChatID == 0 && len(ChannelName) == 0 {
+		fmt.Println("ChatID or ChannelName must be set.")
+		os.Exit(1)
+	}
+
+	if len(token) < 45 {
+		fmt.Printf("Token is invalid: %v\n", token)
+		os.Exit(1)
+	}
+}
+
+func getMessage() {
+	if message == "-" { // stdin
+		var (
+			scanner *bufio.Scanner
+			line    string
+		)
+
+		scanner = bufio.NewScanner(os.Stdin)
+		message = ""
+
+		for scanner.Scan() {
+			line = scanner.Text()
+			if len(line) == 1 && line[0] == '\x1D' {
+				break
+			}
+			message = strings.Join([]string{message, line, "\n"}, "")
+		}
+
+		if scanner.Err() != nil {
+			fmt.Printf("Read stdin error: %v\n", scanner.Err())
+			os.Exit(1)
+		}
+	}
+}
+
+func versionInfo() {
+	fmt.Println("Send message via Telegram Bot.")
+	fmt.Println("Version:", VERSION)
+	fmt.Println("Author: ", AUTHOR)
+	fmt.Println("License:", LICENSE)
+	fmt.Println("Website:", WEBSITE)
+	os.Exit(0)
+}
+
+func main() {
+	if flag.NFlag() == 0 || version {
+		versionInfo()
+	}
+
+	checkParam()
+	getMessage()
+	initBot(token, timeout, debug)
+
+	if len(message) != 0 {
+		sendMessage(message)
+		os.Exit(0)
+	}
+
+	if location {
+		sendLocation(latitude, longitude)
+		os.Exit(0)
+	}
+
+	if len(filename) != 0 {
+		sendFile(filename, filetype, caption)
+		os.Exit(0)
+	}
+}
+
 func init() {
 	flag.BoolVar(&version, "version", false, "Print version information.")
 	flag.StringVar(&format, "format", "text", "How to format the message(s). "+
@@ -170,68 +281,5 @@ func init() {
 	flag.Float64Var(&longitude, "longitude", 0, "Set longitude, value valid [-180, 180]")
 	flag.Float64Var(&latitude, "latitude", 0, "Set latitude, value valid [-90, 90]")
 	flag.BoolVar(&disNotice, "disable_notification", false, "Disable notification")
-}
-
-func main() {
 	flag.Parse()
-
-	if flag.NFlag() == 0 {
-		version = true
-	}
-
-	if version {
-		fmt.Println("telegram send version:", _version_)
-		os.Exit(0)
-	}
-
-	if ChatID == 0 && len(ChannelName) == 0 {
-		log.Panic("Does not provide chatid or channel name.")
-	}
-	if len(token) < 45 {
-		log.Panic("token is invalid.")
-	}
-
-	if message == "-" { // stdin
-		scanner := bufio.NewScanner(os.Stdin)
-		message = ""
-		for scanner.Scan() {
-			line := scanner.Text()
-			if len(line) == 1 && line[0] == '\x1D' {
-				break
-			}
-			message = strings.Join([]string{message, line, "\n"}, "")
-		}
-		if err := scanner.Err(); err != nil {
-			log.Panic("The input was invalid.", message)
-		}
-	}
-
-	bot := Bot(token, timeout, debug)
-
-	if len(message) != 0 {
-		sendMessage(bot, message)
-	}
-	if location {
-		if longitude < -180 || longitude > 180 || latitude < -90 || latitude > 90 {
-			log.Panic("Longitude or latitude value invalid.")
-		}
-		sendLocation(bot, latitude, longitude)
-	}
-	if _, err := os.Stat(filename); err == nil {
-		switch filetype {
-		case "photo":
-			sendPhoto(bot, filename, caption)
-		case "video":
-			sendVideo(bot, filename, caption)
-		case "audio":
-			sendAudio(bot, filename, caption)
-		case "sticker":
-			sendSticker(bot, filename)
-		case "animation":
-			sendAnimation(bot, filename, caption)
-		default:
-			sendDocument(bot, filename, caption)
-		}
-	}
-
 }

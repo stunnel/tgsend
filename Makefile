@@ -1,6 +1,6 @@
 GOCMD=go
 CGO_ENABLED=0
-VERSION=$(shell grep 'var _version_ = ' main.go | cut -d'"' -f2)
+VERSION=$(shell grep 'VERSION\s=\s' main.go | cut -d'"' -f2)
 GOBUILD=$(GOCMD) build
 GOCLEAN=$(GOCMD) clean
 GOTEST=$(GOCMD) test
@@ -67,7 +67,7 @@ android-termux:
 		$(GOCLEAN)
 		GOOS=android GOARCH=arm64 make build
 
-release:
+releases:
 		$(GOCLEAN)
 
 		make linux-amd64

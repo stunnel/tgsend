@@ -5,13 +5,14 @@ import (
 	"flag"
 	"fmt"
 	"os"
+	"path"
 	"strings"
 
-	"github.com/go-telegram-bot-api/telegram-bot-api"
+	"github.com/go-telegram-bot-api/telegram-bot-api/v5"
 )
 
 const (
-	VERSION = "0.1.2"
+	VERSION = "0.1.3"
 	AUTHOR  = "travis"
 	LICENSE = "MIT license"
 	WEBSITE = "https://github.com/travislee8964/tgsend"
@@ -84,65 +85,6 @@ func sendMessage(message string) {
 	}
 }
 
-func sendPhoto(filename string, caption string) {
-	msg := tgbotapi.NewPhotoUpload(ChatID, filename)
-	msg.Caption = caption
-
-	_, err = bot.Send(msg)
-	if err != nil {
-		errorExit(err.Error())
-	}
-}
-
-func sendVideo(filename string, caption string) {
-	msg := tgbotapi.NewVideoUpload(ChatID, filename)
-	msg.Caption = caption
-
-	_, err = bot.Send(msg)
-	if err != nil {
-		errorExit(err.Error())
-	}
-}
-
-func sendAudio(filename string, caption string) {
-	msg := tgbotapi.NewAudioUpload(ChatID, filename)
-	msg.Caption = caption
-
-	_, err = bot.Send(msg)
-	if err != nil {
-		errorExit(err.Error())
-	}
-}
-
-func sendSticker(filename string) {
-	msg := tgbotapi.NewStickerUpload(ChatID, filename)
-
-	_, err = bot.Send(msg)
-	if err != nil {
-		errorExit(err.Error())
-	}
-}
-
-func sendAnimation(filename string, caption string) {
-	msg := tgbotapi.NewAnimationUpload(ChatID, filename)
-	msg.Caption = caption
-
-	_, err = bot.Send(msg)
-	if err != nil {
-		errorExit(err.Error())
-	}
-}
-
-func sendDocument(filename string, caption string) {
-	msg := tgbotapi.NewDocumentUpload(ChatID, filename)
-	msg.Caption = caption
-
-	_, err = bot.Send(msg)
-	if err != nil {
-		errorExit(err.Error())
-	}
-}
-
 func sendLocation(latitude float64, longitude float64) {
 	if longitude < -180 || longitude > 180 || latitude < -90 || latitude > 90 {
 		fmt.Printf("Longitude or latitude value invalid: %v, %v\n", latitude, longitude)
@@ -158,35 +100,51 @@ func sendLocation(latitude float64, longitude float64) {
 }
 
 func sendFile(filename string, filetype string, caption string) {
-	result, err := os.Stat(filename)
+	stat, err := os.Stat(filename)
 	if err != nil {
 		fmt.Printf("Reading file %v error: %v\n", filename, err.Error())
 		os.Exit(1)
 	}
 
-	if result.IsDir() {
+	if stat.IsDir() {
 		fmt.Printf("%v is a directory.\n", filename)
 		os.Exit(1)
 	}
 
-	if result.Size() > 1024*1024*50 {
-		fmt.Printf("File %v is too large, size: %v\n", filename, result.Size())
+	if stat.Size() > 1024*1024*50 {
+		fmt.Printf("File %v is too large, size: %v\n", filename, stat.Size())
 		os.Exit(1)
 	}
 
+	if caption == "" {
+		caption = path.Base(filename)
+	}
+
+	reader, _ := os.Open(filename)
+	file := tgbotapi.FileReader{
+		Name:   caption,
+		Reader: reader,
+	}
+
+	var msg tgbotapi.Chattable
 	switch filetype {
 	case "photo":
-		sendPhoto(filename, caption)
+		msg = tgbotapi.NewPhoto(ChatID, file)
 	case "video":
-		sendVideo(filename, caption)
+		msg = tgbotapi.NewVideo(ChatID, file)
 	case "audio":
-		sendAudio(filename, caption)
+		msg = tgbotapi.NewAudio(ChatID, file)
 	case "sticker":
-		sendSticker(filename)
+		msg = tgbotapi.NewSticker(ChatID, file)
 	case "animation":
-		sendAnimation(filename, caption)
+		msg = tgbotapi.NewAnimation(ChatID, file)
 	default:
-		sendDocument(filename, caption)
+		msg = tgbotapi.NewDocument(ChatID, file)
+	}
+
+	_, err = bot.Send(msg)
+	if err != nil {
+		errorExit(err.Error())
 	}
 }
 
@@ -237,6 +195,7 @@ func versionInfo() {
 }
 
 func main() {
+	initFlag()
 	if flag.NFlag() == 0 || version {
 		versionInfo()
 	}
@@ -261,7 +220,7 @@ func main() {
 	}
 }
 
-func init() {
+func initFlag() {
 	flag.BoolVar(&version, "version", false, "Print version information.")
 	flag.StringVar(&format, "format", "text", "How to format the message(s). "+
 		"Choose from ['text', 'markdown', 'html']")

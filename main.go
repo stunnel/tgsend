@@ -12,7 +12,7 @@ import (
 )
 
 const (
-	VERSION = "0.1.3"
+	VERSION = "0.1.4"
 	AUTHOR  = "travis"
 	LICENSE = "MIT license"
 	WEBSITE = "https://github.com/travislee8964/tgsend"
@@ -55,11 +55,6 @@ func initBot(token string, timeout int, debug bool) {
 	u.Timeout = timeout
 }
 
-func errorExit(errMsg string) {
-	fmt.Printf("send message failed. error msg: %v\n", errMsg)
-	os.Exit(1)
-}
-
 func sendMessage(message string) {
 	var msg tgbotapi.MessageConfig
 	if ChatID != 0 {
@@ -79,7 +74,7 @@ func sendMessage(message string) {
 		msg.ParseMode = tgbotapi.ModeHTML
 	}
 
-	_, err := bot.Send(msg)
+	_, err = bot.Send(msg)
 	if err != nil {
 		errorExit(err.Error())
 	}
@@ -92,6 +87,7 @@ func sendLocation(latitude float64, longitude float64) {
 	}
 
 	msg := tgbotapi.NewLocation(ChatID, latitude, longitude)
+	msg.DisableNotification = disNotice
 
 	_, err = bot.Send(msg)
 	if err != nil {
@@ -100,32 +96,7 @@ func sendLocation(latitude float64, longitude float64) {
 }
 
 func sendFile(filename string, filetype string, caption string) {
-	stat, err := os.Stat(filename)
-	if err != nil {
-		fmt.Printf("Reading file %v error: %v\n", filename, err.Error())
-		os.Exit(1)
-	}
-
-	if stat.IsDir() {
-		fmt.Printf("%v is a directory.\n", filename)
-		os.Exit(1)
-	}
-
-	if stat.Size() > 1024*1024*50 {
-		fmt.Printf("File %v is too large, size: %v\n", filename, stat.Size())
-		os.Exit(1)
-	}
-
-	if caption == "" {
-		caption = path.Base(filename)
-	}
-
-	reader, _ := os.Open(filename)
-	file := tgbotapi.FileReader{
-		Name:   caption,
-		Reader: reader,
-	}
-
+	file := fileReader(filename, filetype, caption)
 	var msg tgbotapi.Chattable
 	switch filetype {
 	case "photo":
@@ -148,6 +119,28 @@ func sendFile(filename string, filetype string, caption string) {
 	}
 }
 
+func fileReader(filename string, filetype string, caption string) (file tgbotapi.FileReader) {
+	reader, err := os.Open(filename)
+	if err != nil {
+		fmt.Printf("Reading file %v error: %v\n", filename, err.Error())
+		os.Exit(1)
+	}
+
+	stat, _ := reader.Stat()
+	size(stat, filetype)
+
+	if caption == "" {
+		caption = path.Base(filename)
+	}
+
+	file = tgbotapi.FileReader{
+		Name:   caption,
+		Reader: reader,
+	}
+
+	return file
+}
+
 func checkParam() {
 	if ChatID == 0 && len(ChannelName) == 0 {
 		fmt.Println("ChatID or ChannelName must be set.")
@@ -160,8 +153,8 @@ func checkParam() {
 	}
 }
 
-func getMessage() {
-	if message == "-" { // stdin
+func getMessageStdin() {
+	if message == "-" { // from stdin
 		var (
 			scanner *bufio.Scanner
 			line    string
@@ -185,6 +178,33 @@ func getMessage() {
 	}
 }
 
+func errorExit(errMsg string) {
+	fmt.Printf("send message failed. error msg: %v\n", errMsg)
+	os.Exit(1)
+}
+
+func size(fileInfo os.FileInfo, filetype string) {
+	if fileInfo.IsDir() {
+		fmt.Printf("Error: '%v' is a directory.\n", filename)
+		os.Exit(1)
+	}
+
+	var sizeLimit int64
+	switch filetype {
+	case "photo":
+		sizeLimit = 10 * 1024 * 1024 // image max size is 10M.
+	default:
+		sizeLimit = 50 * 1024 * 1024 // Telegram bot api limit file size to 50MB.
+	}
+
+	fileSize := fileInfo.Size()
+	if fileSize > sizeLimit {
+		fmt.Printf("File %v is too large, size: %.2f MB, size limit: %v MB\n",
+			filename, float64(fileSize)/(1024*1024), sizeLimit/(1024*1024))
+		os.Exit(1)
+	}
+}
+
 func versionInfo() {
 	fmt.Println("Send message via Telegram Bot.")
 	fmt.Println("Version:", VERSION)
@@ -201,7 +221,7 @@ func main() {
 	}
 
 	checkParam()
-	getMessage()
+	getMessageStdin()
 	initBot(token, timeout, debug)
 
 	if len(message) != 0 {

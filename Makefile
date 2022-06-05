@@ -21,7 +21,7 @@ build-windows:
 
 linux-amd64:
 		$(GOCLEAN)
-		 GOOS=linux GOARCH=amd64 make build
+		GOOS=linux GOARCH=amd64 make build
 
 linux-arm64:
 		$(GOCLEAN)

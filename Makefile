@@ -68,7 +68,7 @@ android-termux:
 		$(GOCLEAN)
 		GOOS=android GOARCH=arm64 make build
 
-release:
+releases:
 		$(GOCLEAN)
 
 		make linux-amd64

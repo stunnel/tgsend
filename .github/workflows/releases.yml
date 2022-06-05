@@ -25,12 +25,9 @@ jobs:
         # if: startsWith(github.ref, 'refs/tags/')
         run: make releases; ls -lh bin/
 
-      - name: Run GoReleaser
-        uses: goreleaser/goreleaser-action@v3
+      - name: Upload Release Asset
+        uses: softprops/action-gh-release@v1
+        if: startsWith(github.ref, 'refs/tags/')
         with:
           files: bin/*
-          distribution: goreleaser
-          version: latest
-          args: release --rm-dist
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          token: ${{ secrets.GITHUB_TOKEN }}

@@ -5,19 +5,20 @@ GOBUILD=$(GOCMD) build
 GOCLEAN=$(GOCMD) clean
 GOTEST=$(GOCMD) test
 BINARY=tgsend
-DIR=releases
+DIR=bin
 LDFLAGS+="-s -w"
 
 # Builds the project
 build:
-		$(GOBUILD) -ldflags=${LDFLAGS} -o $(DIR)/$(BINARY)-$(GOOS)-$(GOARCH)
-		tar -Jcvf $(DIR)/$(BINARY)-$(GOOS)-$(GOARCH)-${VERSION}.tar.xz -C $(DIR) $(BINARY)-$(GOOS)-$(GOARCH)
-		rm -f $(DIR)/$(BINARY)-$(GOOS)-$(GOARCH)
+		$(GOBUILD) -ldflags=${LDFLAGS} -o $(DIR)/$(BINARY)-$(GOOS)-$(GOARCH)-$(VERSION)
+		ln -s -r $(DIR)/$(BINARY)-$(GOOS)-$(GOARCH)-$(VERSION) $(DIR)/$(BINARY)
+		tar -Jcvf $(DIR)/$(BINARY)-$(GOOS)-$(GOARCH)-${VERSION}.tar.xz -C $(DIR) $(BINARY)-$(GOOS)-$(GOARCH)-$(VERSION) $(BINARY)
+		rm -f $(DIR)/$(BINARY)-$(GOOS)-$(GOARCH)-$(VERSION) $(DIR)/$(BINARY)
 
 build-windows:
-		$(GOBUILD) -ldflags=${LDFLAGS} -o $(DIR)/$(BINARY).exe
-		tar -Jcvf $(DIR)/$(BINARY)-windows-amd64-${VERSION}.tar.xz -C $(DIR) $(BINARY).exe
-		rm -f $(DIR)/$(BINARY).exe
+		$(GOBUILD) -ldflags=${LDFLAGS} -o $(DIR)/$(BINARY)-$(GOOS)-$(GOARCH)-$(VERSION).exe
+		tar -Jcvf $(DIR)/$(BINARY)-$(GOOS)-$(GOARCH)-$(VERSION).tar.xz -C $(DIR) $(BINARY)-$(GOOS)-$(GOARCH)-$(VERSION).exe
+		rm -f $(DIR)/$(BINARY)-$(GOOS)-$(GOARCH)-$(VERSION).exe
 
 linux-amd64:
 		$(GOCLEAN)
@@ -72,14 +73,14 @@ release:
 
 		make linux-amd64
 		make linux-arm64
-		make linux-arm
-		make linux-mips
-		make linux-mipsle
-		make linux-mips64
-		make linux-mips64le
-		make freebsd
+#		make linux-arm
+#		make linux-mips
+#		make linux-mipsle
+#		make linux-mips64
+#		make linux-mips64le
 		make mac
 		make mac-arm
+		make freebsd
 		make windows
 
 		make clean
